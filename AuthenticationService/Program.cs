@@ -1,3 +1,6 @@
+using AuthenticationService.Datas;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -9,6 +12,12 @@ builder.Services.AddSwaggerGen();
 
 // Add CORS
 builder.Services.AddCors();
+
+// Ad DB
+string connectionString = "Server=database;Database=auth;User=sa;Password=P@ssword;TrustServerCertificate=True;";
+builder.Services.AddDbContext<TmpDataContext>(opt => opt
+    .UseSqlServer(connectionString)
+);
 
 var app = builder.Build();
 

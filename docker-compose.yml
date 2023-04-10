@@ -6,3 +6,16 @@ services:
     build:
       context: .
       dockerfile: AuthenticationService/Dockerfile
+
+  database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=P@ssword
+    ports:
+      - "1433:1433"
+    volumes:
+      - "auth-service:/var/opt/mssql"
+
+volumes:
+  auth-service:
