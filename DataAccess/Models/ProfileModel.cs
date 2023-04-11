@@ -1,4 +1,4 @@
-﻿namespace AuthenticationService.Models
+﻿namespace DataAccess.Models
 {
     public class ProfileModel
     {
