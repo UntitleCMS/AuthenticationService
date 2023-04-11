@@ -22,7 +22,7 @@ namespace AuthenticationService.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("AuthenticationService.Models.ProfileModel", b =>
+            modelBuilder.Entity("DataAccess.Models.ProfileModel", b =>
                 {
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd()

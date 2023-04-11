@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AuthenticationService.Migrations
 {
     [DbContext(typeof(TmpDataContext))]
-    [Migration("20230410111257_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20230411114530_InitalTmpDataMigration")]
+    partial class InitalTmpDataMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace AuthenticationService.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("AuthenticationService.Models.ProfileModel", b =>
+            modelBuilder.Entity("DataAccess.Models.ProfileModel", b =>
                 {
                     b.Property<Guid>("ID")
                         .ValueGeneratedOnAdd()
