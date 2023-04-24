@@ -16,3 +16,9 @@ services:
       - MSSQL_SA_PASSWORD=P@ssword
     ports:
       - "1433:1433"
+    volumes:
+      - "auth-service:/var/opt/mssql"
+
+volumes:
+  auth-service:
+
