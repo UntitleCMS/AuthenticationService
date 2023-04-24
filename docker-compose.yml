@@ -6,16 +6,13 @@ services:
     build:
       context: .
       dockerfile: AuthenticationService/Dockerfile
+    environment: 
+      DB_CONNECTION_STRING: Server=auth-database;Database=authentication;User=sa;Password=P@ssword;TrustServerCertificate=True;
 
-  database:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+  auth-database:
+    image: mcr.microsoft.com/mssql/server:2019-latest
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=P@ssword
     ports:
       - "1433:1433"
-    volumes:
-      - "auth-service:/var/opt/mssql"
-
-volumes:
-  auth-service:

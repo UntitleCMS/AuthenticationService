@@ -16,31 +16,16 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCors();
 
 // Add DB
-string connectionString = "Server=database;Database=authentication;User=sa;Password=P@ssword;TrustServerCertificate=True;";
-var migrationsAssembly = typeof(Program).Assembly.GetName().Name;
+string migrationsAssembly = typeof(Program).Assembly.GetName().Name ?? string.Empty;
+string connectionString
+    = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+    ?? builder.Configuration.GetConnectionString("default")
+    ?? string.Empty;
 
 builder.Services.AddDbContext<TmpDataContext>(opt => opt
     .UseSqlServer(connectionString)
 );
 
-builder.Services.AddDbContext<AspNetIdentityDbContext>(opt => opt
-    .UseSqlServer(connectionString, opt => opt.MigrationsAssembly(migrationsAssembly))
-);
-
-
-// Add Identity
-builder.Services
-    .AddIdentity<IdentityUser, IdentityRole>()
-    .AddEntityFrameworkStores<AspNetIdentityDbContext>();
-
-//builder.Services
-//    .AddIdentityServer()
-//    .AddAspNetIdentity<AspNetIdentityDbContext>()
-//    .AddConfigurationStore(opt => opt.ConfigureDbContext =
-//            b => b.UseSqlServer(connectionString, opt => opt.MigrationsAssembly(migrationsAssembly)))
-//    .AddOperationalStore(opt => opt.ConfigureDbContext =
-//            b => b.UseSqlServer(connectionString, opt => opt.MigrationsAssembly(migrationsAssembly)))
-//    .AddDeveloperSigningCredential();
 
 var app = builder.Build();
 
@@ -51,15 +36,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.UseCors(a=>a
         .AllowAnyOrigin()
-        //.AllowCredentials()
         .AllowAnyHeader()
         .AllowAnyMethod()
     );
 }
 
 app.UseHttpsRedirection();
-
-//app.UseIdentityServer();
 
 app.UseAuthorization();
 
