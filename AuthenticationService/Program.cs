@@ -1,7 +1,6 @@
-using DataAccess.Datas;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
+using AuthenticationService.Datas;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +19,7 @@ string migrationsAssembly = typeof(Program).Assembly.GetName().Name ?? string.Em
 string connectionString
     = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
     ?? builder.Configuration.GetConnectionString("default")
-    ?? string.Empty;
+    ?? throw new InvalidOperationException("Connection string not found!");
 
 builder.Services.AddDbContext<TmpDataContext>(opt => opt
     .UseSqlServer(connectionString)

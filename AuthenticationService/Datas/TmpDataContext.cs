@@ -1,7 +1,7 @@
-﻿using DataAccess.Models;
+﻿using AuthenticationService.Entitis;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Datas
+namespace AuthenticationService.Datas
 {
     public class TmpDataContext : DbContext
     {

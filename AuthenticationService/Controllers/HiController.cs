@@ -1,4 +1,4 @@
-﻿using DataAccess.Datas;
+﻿using AuthenticationService.Datas;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +15,7 @@ namespace AuthenticationService.Controllers
             _dataContext = dataContext;
         }
 
-        [HttpGet]
+        [HttpGet("add")]
         public IActionResult Hi()
         {
             _dataContext.Profile.Add(new()
