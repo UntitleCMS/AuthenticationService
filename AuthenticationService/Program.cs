@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using AuthenticationService.Datas;
+using AuthenticationService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,8 +24,11 @@ string connectionString
 
 builder.Services.AddDbContext<TmpDataContext>(opt => opt
     .UseSqlServer(connectionString)
+    .UseOpenIddict()
 );
 
+// Add OpendIddict
+builder.Services.AddMyOpendIddictConfiguration();
 
 var app = builder.Build();
 
@@ -42,6 +46,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
