@@ -1,4 +1,6 @@
 ﻿using AuthenticationService.Datas;
+using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.Extensions.Options;
 using System.Runtime.CompilerServices;
 
 namespace AuthenticationService;
@@ -6,7 +8,7 @@ namespace AuthenticationService;
 public static class OpenIddictConfiguration
 {
     public static void AddMyOpendIddictConfiguration(this IServiceCollection services)
-    { 
+    {
         // OpenIdDict
         services.AddOpenIddict()
 
@@ -46,6 +48,27 @@ public static class OpenIddictConfiguration
 
             // Register the ASP.NET Core host.
             options.UseAspNetCore();
+        })
+
+        // github
+        .AddClient(options =>
+        {
+            options
+                .AllowAuthorizationCodeFlow();
+            options
+                .AddDevelopmentEncryptionCertificate()
+                .AddDevelopmentSigningCertificate();
+            options
+                .UseAspNetCore()
+                .EnableRedirectionEndpointPassthrough();
+            options.UseWebProviders()
+                .UseGitHub(options =>
+                {
+                    options
+                        .SetClientId("b4b68f83d48d756f33e0")
+                        .SetClientSecret("8c584df75e3f9ce3a554641946cc2faed50b34a8")
+                        .SetRedirectUri("callback/login/github");
+                });
         });
 
         // Register the worker responsible of seeding the database with the sample clients.
