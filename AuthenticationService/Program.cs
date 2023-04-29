@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using AuthenticationService.Datas;
 using AuthenticationService;
+using System;
+using Microsoft.AspNetCore.Identity;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +32,27 @@ builder.Services.AddDbContext<TmpDataContext>(opt => opt
 
 // Add OpendIddict
 builder.Services.AddMyOpendIddictConfiguration();
+
+// Add Identity
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = false)
+    .AddSignInManager()
+    .AddEntityFrameworkStores<TmpDataContext>()
+    .AddUserManager<UserManager<IdentityUser>>()
+    .AddDefaultTokenProviders();
+
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.ClaimsIdentity.UserNameClaimType = Claims.Name;
+    options.ClaimsIdentity.UserIdClaimType = Claims.Subject;
+    options.ClaimsIdentity.RoleClaimType = Claims.Role;
+});
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = Schemes.Bearer;
+    options.DefaultChallengeScheme = Schemes.Bearer;
+});
+
 
 var app = builder.Build();
 
