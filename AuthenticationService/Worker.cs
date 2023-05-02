@@ -15,7 +15,7 @@ namespace AuthenticationService
         {
             using var scope = _serviceProvider.CreateScope();
 
-            var context = scope.ServiceProvider.GetRequiredService<TmpDataContext>();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             await context.Database.EnsureCreatedAsync();
 
             var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();

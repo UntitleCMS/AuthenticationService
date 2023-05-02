@@ -11,30 +11,25 @@ public static class OpenIddictConfiguration
 {
     public static void AddMyOpendIddictConfiguration(this IServiceCollection services)
     {
-        // OpenIdDict
         services.AddOpenIddict()
 
-        // Register the OpenIddict core components.
         .AddCore(options =>
         {
-            // Configure OpenIddict to use the Entity Framework Core stores and models.
-            // Note: call ReplaceDefaultEntities() to replace the default entities.
             options.UseEntityFrameworkCore()
-                   .UseDbContext<TmpDataContext>();
+                   .UseDbContext<AppDbContext>();
         })
 
-        // Register the OpenIddict server components.
         .AddServer(options =>
         {
-            // Enable the token endpoint.
+            // Enable endpoint.
             options.SetTokenEndpointUris("connect/token");
             options.SetUserinfoEndpointUris("connect/userinfo");
 
-            // Enable the client credentials flow.
-            options.AllowClientCredentialsFlow();
-
+            // Enable flow.
             options.AllowPasswordFlow();
             options.AllowRefreshTokenFlow();
+
+            // Allow no client_id request
             options.AcceptAnonymousClients();
 
             // Register the signing and encryption credentials.

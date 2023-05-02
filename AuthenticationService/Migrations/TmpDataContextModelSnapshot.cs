@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace AuthenticationService.Migrations
 {
-    [DbContext(typeof(TmpDataContext))]
+    [DbContext(typeof(AppDbContext))]
     partial class TmpDataContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

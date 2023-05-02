@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace AuthenticationService.Migrations
 {
-    [DbContext(typeof(TmpDataContext))]
+    [DbContext(typeof(AppDbContext))]
     [Migration("20230429165059_Init")]
     partial class Init
     {
