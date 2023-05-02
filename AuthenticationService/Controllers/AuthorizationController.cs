@@ -3,57 +3,132 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Server.AspNetCore;
-using Polly;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
 using OpenIddict.Abstractions;
 using Microsoft.AspNetCore;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication;
 
 namespace AuthenticationService.Controllers
 {
     public class AuthorizationController : Controller
     {
         private readonly IOpenIddictApplicationManager _applicationManager;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly SignInManager<IdentityUser> _signInManager;
 
-        public AuthorizationController(IOpenIddictApplicationManager applicationManager)
-            => _applicationManager = applicationManager;
+        public AuthorizationController(IOpenIddictApplicationManager applicationManager, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+        {
+            _applicationManager = applicationManager;
+            _userManager = userManager;
+            _signInManager = signInManager;
+        }
 
         [HttpPost("~/connect/token"), Produces("application/json")]
         public async Task<IActionResult> Exchange()
         {
-            var request = HttpContext.GetOpenIddictServerRequest();
-            if (!request.IsClientCredentialsGrantType())
+            var request
+                = HttpContext.GetOpenIddictServerRequest()
+                ?? throw new InvalidOperationException("OpenIddictServerRequest is null");
+
+            if (request.IsPasswordGrantType())
             {
-                throw new NotImplementedException("The specified grant is not implemented.");
+                var user = await _userManager.FindByNameAsync(request.Username!);
+
+                if (user == null || user.PasswordHash != request.Password)
+                {
+                    return BadRequest("Invalid Username or Password.");
+                }
+
+                var principal = await _signInManager.CreateUserPrincipalAsync(user!);
+
+                // Set the list of scopes granted to the client application.
+                principal.SetScopes(new[]
+                {
+                    Scopes.OpenId,
+                    Scopes.Email,
+                    Scopes.Profile,
+                    Scopes.Roles
+                }.Intersect(request.GetScopes()));
+
+                foreach (var claim in principal.Claims)
+                {
+                    claim.SetDestinations(GetDestinations(claim, principal));
+                }
+
+                return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             }
 
-            // Note: the client credentials are automatically validated by OpenIddict:
-            // if client_id or client_secret are invalid, this action won't be invoked.
-
-            var application = await _applicationManager.FindByClientIdAsync(request.ClientId) ??
-                throw new InvalidOperationException("The application cannot be found.");
-
-            // Create a new ClaimsIdentity containing the claims that
-            // will be used to create an id_token, a token or a code.
-            var identity = new ClaimsIdentity(TokenValidationParameters.DefaultAuthenticationType, Claims.Name, Claims.Role);
-
-            // Use the client_id as the subject identifier.
-            identity.SetClaim(Claims.Subject, await _applicationManager.GetClientIdAsync(application));
-            identity.SetClaim(Claims.Name, await _applicationManager.GetDisplayNameAsync(application));
-
-            identity.SetDestinations(static claim => claim.Type switch
-            {
-                // Allow the "name" claim to be stored in both the access and identity tokens
-                // when the "profile" scope was granted (by calling principal.SetScopes(...)).
-                Claims.Name when claim.Subject.HasScope(Scopes.Profile)
-                    => new[] { Destinations.AccessToken, Destinations.IdentityToken },
-
-                // Otherwise, only store the claim in the access tokens.
-                _ => new[] { Destinations.AccessToken }
-            });
-
-            return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+            throw new NotImplementedException("The specified grant type is not implemented.");
         }
+
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromForm] RegisterDTO registerDTO)
+        {
+            var usr = await _userManager.FindByNameAsync(registerDTO.Username);
+            if (usr != null) return BadRequest($"username '{registerDTO.Username}' is already existed.");
+
+            IdentityUser user = new()
+            { 
+                UserName = registerDTO.Username,
+                PasswordHash = registerDTO.Password
+            };
+            await _userManager.CreateAsync(user);
+
+            return Ok(registerDTO);
+        }
+
+        private IEnumerable<string> GetDestinations(Claim claim, ClaimsPrincipal principal)
+        {
+            // Note: by default, claims are NOT automatically included in the access and identity tokens.
+            // To allow OpenIddict to serialize them, you must attach them a destination, that specifies
+            // whether they should be included in access tokens, in identity tokens or in both.
+
+            switch (claim.Type)
+            {
+                case Claims.Name:
+                    yield return Destinations.AccessToken;
+
+                    if (principal.HasScope(Scopes.Profile))
+                        yield return Destinations.IdentityToken;
+
+                    yield break;
+
+                case Claims.Email:
+                    yield return Destinations.AccessToken;
+
+                    if (principal.HasScope(Scopes.Email))
+                        yield return Destinations.IdentityToken;
+
+                    yield break;
+
+                case Claims.Role:
+                    yield return Destinations.AccessToken;
+
+                    if (principal.HasScope(Scopes.Roles))
+                        yield return Destinations.IdentityToken;
+
+                    yield break;
+
+                // Never include the security stamp in the access and identity tokens, as it's a secret value.
+                case "AspNet.Identity.SecurityStamp": yield break;
+
+                default:
+                    yield return Destinations.AccessToken;
+                    yield break;
+            }
+        }
+    }
+
+    public class RegisterDTO
+    {
+        [Required]
+        public string Username { get; set; } = string.Empty;
+
+        [Required]
+        public string Password { get; set; } = string.Empty;
     }
 }

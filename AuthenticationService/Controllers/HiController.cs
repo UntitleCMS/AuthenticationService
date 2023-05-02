@@ -8,9 +8,9 @@ namespace AuthenticationService.Controllers
     [ApiController]
     public class HiController : ControllerBase
     {
-        private readonly TmpDataContext _dataContext;
+        private readonly AppDbContext _dataContext;
 
-        public HiController(TmpDataContext dataContext)
+        public HiController(AppDbContext dataContext)
         {
             _dataContext = dataContext;
         }
