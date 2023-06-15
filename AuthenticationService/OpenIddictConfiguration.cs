@@ -1,8 +1,11 @@
 ﻿using AuthenticationService.Datas;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+
 
 namespace AuthenticationService;
 
@@ -33,9 +36,10 @@ public static class OpenIddictConfiguration
             options.AcceptAnonymousClients();
 
             // Register the signing and encryption credentials.
-            options.AddDevelopmentEncryptionCertificate()
-                   .AddDevelopmentSigningCertificate()
-                   .DisableAccessTokenEncryption();
+            options
+               .AddDevelopmentEncryptionCertificate()
+               .AddDevelopmentSigningCertificate()
+               .DisableAccessTokenEncryption();
 
 
             // Using reference tokens means the actual access and refresh tokens
@@ -48,15 +52,21 @@ public static class OpenIddictConfiguration
             options
                 .RegisterScopes
                 (
-                    OpenIddictConstants.Permissions.Scopes.Email,
-                    OpenIddictConstants.Permissions.Scopes.Profile,
-                    OpenIddictConstants.Permissions.Scopes.Roles,
-                    OpenIddictConstants.Permissions.Scopes.Phone
+                    OpenIddictConstants.Scopes.Email,
+                    OpenIddictConstants.Scopes.Profile,
+                    OpenIddictConstants.Scopes.Roles,
+                    OpenIddictConstants.Scopes.Phone
                 );
 
             // Set the lifetime of your tokens
-            options.SetAccessTokenLifetime(TimeSpan.FromMinutes(1));
-            options.SetRefreshTokenLifetime(TimeSpan.FromDays(1));
+            //options.SetAccessTokenLifetime(TimeSpan.FromMinutes(5));
+            options.SetAccessTokenLifetime(TimeSpan.FromDays(1));
+            options.SetRefreshTokenLifetime(TimeSpan.FromDays(2));
+
+            //options.SetAccessTokenLifetime(TimeSpan.FromSeconds(30));
+            //options.SetRefreshTokenLifetime(TimeSpan.FromMinutes(30));
+
+            //options.SetIssuer("https://172.28.64.1:4434");
 
             // Register the ASP.NET Core host and configure the ASP.NET Core options.
             options.UseAspNetCore()

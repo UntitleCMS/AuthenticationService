@@ -13,9 +13,11 @@ namespace AuthenticationService.Controllers
     [Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
     public class Whoami : ControllerBase
     {
-        public async Task<IActionResult> ME()
+        [HttpGet]
+        public IActionResult ME()
         {
-            return Ok(User.Identity?.Name);
+            return Ok(User.Claims
+                .Select(c=> new {type=c.Type, value=c.Value}) );
         }
     }
 }

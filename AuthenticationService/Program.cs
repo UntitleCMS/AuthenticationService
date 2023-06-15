@@ -6,6 +6,10 @@ using System;
 using Microsoft.AspNetCore.Identity;
 using OpenIddict.Server.AspNetCore;
 using OpenIddict.Abstractions;
+using AuthenticationService.Authentication.Register;
+using AuthenticationService.Authentication.Token;
+using AuthenticationService.Authentication.Profile;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +26,33 @@ builder.Services
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(option =>
+{
+    option.SwaggerDoc("v1", new OpenApiInfo { Title = "AuthenticationService", Version = "v1" });
+    option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter a valid token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "Bearer"
+    });
+    option.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type=ReferenceType.SecurityScheme,
+                    Id="Bearer"
+                }
+            },
+            new string[]{}
+        }
+    });
+});
 
 // Add CORS
 builder.Services.AddCors();
@@ -37,7 +67,6 @@ string connectionString
 // Add Database Context
 builder.Services.AddDbContext<AppDbContext>(opt => opt
     .UseSqlServer(connectionString)
-    // Use Open ID Dict Table to AppDbContext
     .UseOpenIddict()
 );
 
@@ -48,8 +77,8 @@ builder.Services.AddMyOpendIddictConfiguration();
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddSignInManager()
     .AddEntityFrameworkStores<AppDbContext>()
-    .AddUserManager<UserManager<IdentityUser>>();
-    //.AddDefaultTokenProviders();
+    .AddUserManager<UserManager<IdentityUser>>()
+    .AddDefaultTokenProviders();
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -63,6 +92,13 @@ builder.Services.AddAuthentication(options =>
     options.DefaultScheme = OpenIddictConstants.Schemes.Bearer;
     options.DefaultChallengeScheme = OpenIddictConstants.Schemes.Bearer;
 });
+
+
+
+builder.Services.AddScoped<RegisterService>();
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<ProfileService>();
+
 
 
 var app = builder.Build();
@@ -79,7 +115,7 @@ if (app.Environment.IsDevelopment())
     );
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
