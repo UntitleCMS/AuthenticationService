@@ -31,7 +31,7 @@ namespace AuthenticationService.Controllers
 
         [HttpPost("avatar")]
         public async Task<IActionResult> AddAvatarAsync(
-            [FromBody]AvatarRequestDto avatar)
+            [FromForm]AvatarRequestDto avatar)
         {
             Claim claim = new(
                 Claims.Picture,
@@ -48,7 +48,7 @@ namespace AuthenticationService.Controllers
 
         [HttpPost("phone-number")]
         public async Task<IActionResult> AddPhoneNumber(
-            [FromBody]PhoneNumberRequestDto phone)
+            [FromForm]PhoneNumberRequestDto phone)
         {
             Claim claim = new(
                 Claims.PhoneNumber,
