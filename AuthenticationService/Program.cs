@@ -100,6 +100,9 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<ProfileService>();
 
 
+builder.Services.BuildServiceProvider()
+    .GetService<AppDbContext>()!
+    .Database.EnsureCreated();
 
 var app = builder.Build();
 

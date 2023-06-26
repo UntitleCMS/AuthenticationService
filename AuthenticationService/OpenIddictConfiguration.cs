@@ -66,11 +66,16 @@ public static class OpenIddictConfiguration
             //options.SetAccessTokenLifetime(TimeSpan.FromSeconds(30));
             //options.SetRefreshTokenLifetime(TimeSpan.FromMinutes(30));
 
+            var issure = Environment.GetEnvironmentVariable("ISSURE")
+                ?? throw new Exception("ENV AUTH_SERVER is null");
+            options.SetIssuer(issure);
+
             //options.SetIssuer("https://172.28.64.1:4434");
 
             // Register the ASP.NET Core host and configure the ASP.NET Core options.
             options.UseAspNetCore()
-                   .EnableTokenEndpointPassthrough();
+                   .EnableTokenEndpointPassthrough()
+                   .DisableTransportSecurityRequirement();
         })
 
         // Register the OpenIddict validation components.
