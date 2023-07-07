@@ -16,7 +16,7 @@ using AuthenticationService.Authentication.Token;
 
 namespace AuthenticationService.Controllers;
 
-public class TokenController : Controller
+public class TokenController : ControllerBase
 {
     private readonly IOpenIddictApplicationManager _applicationManager;
     private readonly UserManager<IdentityUser> _userManager;
@@ -38,7 +38,7 @@ public class TokenController : Controller
         _tokenService = tokenService;
     }
 
-    [HttpPost("~/connect/token"), Produces("application/json")]
+    [HttpPost("token"), Produces("application/json")]
     public async Task<IActionResult> Exchange()
     {
         var request
