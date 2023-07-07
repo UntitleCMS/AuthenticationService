@@ -25,8 +25,8 @@ public static class OpenIddictConfiguration
         .AddServer(options =>
         {
             // Enable endpoint.
-            options.SetTokenEndpointUris("connect/token");
-            options.SetUserinfoEndpointUris("connect/userinfo");
+            options.SetTokenEndpointUris("token");
+            options.SetUserinfoEndpointUris("userinfo");
 
             // Enable flow.
             options.AllowPasswordFlow();
