@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using AuthenticationService.Authentication.Profile.Dto;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -14,9 +16,18 @@ public class ProfileService
         _userManager = userManager;
     }
 
-    public void todo()
+    public Task<IEnumerable<ProfileResponse>> GetProfiles(IEnumerable<string> ids)
     {
-
+        var a = _userManager.Users
+            .Where(u => ids.Contains(u.Id))
+            .AsNoTracking()
+            .Select(u => new ProfileResponse()
+            {
+                ID = u.Id,
+                Username = u.UserName!,
+                Avatar = $"/avatar/{u.Id}"
+            }) ;
+        return Task.FromResult(a.AsEnumerable());
     }
 
     public async Task<IdentityResult> AddOrUpdateClaim( string username, Claim claim)
