@@ -1,4 +1,5 @@
 ﻿using AuthenticationService.Authentication.Profile.Dto;
+using AuthenticationService.Extentions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -23,9 +24,8 @@ public class ProfileService
             .AsNoTracking()
             .Select(u => new ProfileResponse()
             {
-                ID = u.Id,
-                Username = u.UserName!,
-                Avatar = $"/avatar/{u.Id}"
+                ID = (new Guid(u.Id)).ToBase64Url(),
+                Username = u.UserName!
             }) ;
         return Task.FromResult(a.AsEnumerable());
     }
