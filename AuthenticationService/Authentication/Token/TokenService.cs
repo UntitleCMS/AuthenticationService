@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore;
+﻿using AuthenticationService.Extentions;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using OpenIddict.Abstractions;
@@ -52,6 +53,7 @@ public class TokenService
             .SupportedScope
             .Intersect(Request.GetScopes()));
 
+        principal.AddClaim("sub-b64", new Guid(user.Id).ToBase64Url() );
 
         principal?.SetDestinations(static claim => claim.Type switch
         {
