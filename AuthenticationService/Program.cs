@@ -1,15 +1,10 @@
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using AuthenticationService.Datas;
 using AuthenticationService;
-using System;
 using Microsoft.AspNetCore.Identity;
-using OpenIddict.Server.AspNetCore;
 using OpenIddict.Abstractions;
-using AuthenticationService.Authentication.Register;
-using AuthenticationService.Authentication.Token;
-using AuthenticationService.Authentication.Profile;
 using Microsoft.OpenApi.Models;
+using AuthenticationService.Entitis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,31 +68,7 @@ builder.Services.AddDbContext<AppDbContext>(opt => opt
 // Add OpendIddict configuration
 builder.Services.AddMyOpendIddictConfiguration();
 
-// Add ASP.NET Identity
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-    .AddSignInManager()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddUserManager<UserManager<IdentityUser>>()
-    .AddDefaultTokenProviders();
 
-builder.Services.Configure<IdentityOptions>(options =>
-{
-    options.ClaimsIdentity.UserNameClaimType = OpenIddictConstants.Claims.Name;
-    options.ClaimsIdentity.UserIdClaimType = OpenIddictConstants.Claims.Subject;
-    options.ClaimsIdentity.RoleClaimType = OpenIddictConstants.Claims.Role;
-});
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = OpenIddictConstants.Schemes.Bearer;
-    options.DefaultChallengeScheme = OpenIddictConstants.Schemes.Bearer;
-});
-
-
-
-builder.Services.AddScoped<RegisterService>();
-builder.Services.AddScoped<TokenService>();
-builder.Services.AddScoped<ProfileService>();
 
 
 builder.Services.BuildServiceProvider()
