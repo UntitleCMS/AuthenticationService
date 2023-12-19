@@ -1,67 +1,77 @@
+using AuthenticationService.Features.Login;
+using AuthenticationService.Features.Login.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.ComponentModel;
 using System.Security.Claims;
 
 namespace AuthenticationService.Pages;
 
 public class LoginModel : PageModel
 {
+    private UsernameLoginService _usernameLogin;
+
+    public LoginModel(UsernameLoginService usernameLoginService)
+    {
+        _usernameLogin = usernameLoginService;
+    }
+
     [BindProperty]
     public Credential? C { get; set; } = new();
+    public string Message { get; set; } = string.Empty;
 
     public async Task<IActionResult> OnGet()
     {
         var res = await HttpContext.AuthenticateAsync("cookie");
 
-        Console.WriteLine(User.Identity?.IsAuthenticated);
-
-        if (User.Identity is null || !User.Identity.IsAuthenticated)
+        // Render Login Page if Not login
+        if (!res.Succeeded)
             return Page();
 
-        Console.WriteLine("Auth!!!!!!!!!!!!!!!!!!!!!!!!!");
-
-        var i = new ClaimsIdentity(res.Principal!.Claims, "cookie");
-        var p = new AuthenticationProperties();
+        // Re-signin to complete Challenge if loged in
+        var claims = new Claim[] { new("dummy", "dummy") };
+        var identity = new ClaimsIdentity(claims, "dummy");
+        var property = new AuthenticationProperties();
 
         if (!Request.Query.Any(i => i.Key == "ReturnUrl"))
-            p.RedirectUri = "/";
+            property.RedirectUri = "/";
 
-        return SignIn(new ClaimsPrincipal(i), p, "cookie");
+        return SignIn(new(identity), property, "dummy");
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        Console.WriteLine(C.Provider);
-
-        //var c = new List<Claim>()
-        //{
-        //    new("sub","tmp"),
-        //    new("name","tmp"),
-        //};
-
-        //var i = new ClaimsIdentity(c, "cookie");
-
-        //return SignIn(new ClaimsPrincipal(i), "cookie");
-
-        var provider = new string[] { "google","facebook", "github" };
-        if (!provider.Contains(C.Provider))
+        if (C!.Provider?.CompareTo("login") == 0)
         {
-            return BadRequest();
+            if (C.Username is null || C.Password is null)
+                return IncorrectPasswordOrUsername();
+
+            var claims = await _usernameLogin.GetClaimsAsync(C.Username, C.Password);
+
+            if (!claims.IsSuccess)
+                return IncorrectPasswordOrUsername();
+
+            var identity = new ClaimsIdentity(claims.Value, "cookie");
+            return SignIn(new(identity), "cookie");
         }
 
-        return Challenge(authenticationSchemes: C.Provider!, properties: new()
-        {
-            AllowRefresh = true,
-        });
+        var provider = new string[] { "google", "facebook", "github" };
+        if (!provider.Contains(C.Provider))
+            return NotSupportLoginMehtod();
+
+        return Challenge(authenticationSchemes: C.Provider!);
     }
 
-}
+    private IActionResult IncorrectPasswordOrUsername()
+    {
+        Message = "Incorrect Username or Password";
+        return Page();
+    }
 
-public class Credential
-{
-    public string? Username { get; set; }
-    public string? Password { get; set; }
-    public string? Provider { get; set; }
+    private IActionResult NotSupportLoginMehtod()
+    {
+        Message = "Not Supported Login Method";
+        return Page();
+    }
+
 }

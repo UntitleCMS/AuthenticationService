@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AuthenticationService.Datas
 {
-    public class AppDbContext : IdentityDbContext<IdentityUser,IdentityRole, string>
+    public class AppDbContext : IdentityDbContext<AppIdentityUser,AppIdentityRole, string>
     {
         public DbSet<ProfileModel> Profile { get; set; }
 

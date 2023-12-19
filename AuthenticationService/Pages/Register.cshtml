@@ -1,0 +1,22 @@
+﻿@page
+@model AuthenticationService.Pages.RegisterModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+}
+
+<h2>Register</h2>
+
+<form method="post">
+    Username:
+    <input asp-for="UserInfo!.UserName" /> <br/>
+    Password:
+    <input type="password" asp-for="UserInfo!.Password" /> <br/>
+
+    <input type="submit" value="Register"/>
+
+    <a href="/login">Login</a>
+    <br />
+    <p> @Model.Message </p>
+
+    <br />
+</form>

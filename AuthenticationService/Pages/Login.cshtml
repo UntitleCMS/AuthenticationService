@@ -2,10 +2,7 @@
 @model AuthenticationService.Pages.LoginModel
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
-    ViewData["Title"] = "Login";
 }
-
-<h1>@ViewData["Title"]</h1>
 
 <h2>Login</h2>
 
@@ -14,9 +11,11 @@
     Username:
     <input asp-for="C!.Username" /> <br/>
     Password:
-    <input asp-for="C!.Password" /> <br/>
+    <input asp-for="C!.Password" type="password"/> <br/>
     <input type="submit" value="login" asp-for="C!.Provider"/>
+    <a href="/register">Register</a>
     <br/>
+    @Model.Message
     <br/>
     <input type="submit" value="github" asp-for="C!.Provider"/>
     <input type="submit" value="facebook" asp-for="C!.Provider"/>

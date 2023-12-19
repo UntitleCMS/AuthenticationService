@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using OpenIddict.Abstractions;
 using Microsoft.OpenApi.Models;
 using AuthenticationService.Entitis;
+using AuthenticationService.Features.Login;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,6 +71,7 @@ builder.Services.AddDbContext<AppDbContext>(opt => opt
 builder.Services.AddMyOpendIddictConfiguration();
 
 
+builder.Services.AddScoped<UsernameLoginService>();
 
 
 builder.Services.BuildServiceProvider()

@@ -38,7 +38,9 @@ public class AuthController : ControllerBase
         var claims = new List<Claim>
     {
         // 'subject' claim which is required
-        new(OpenIddictConstants.Claims.Subject, result.Principal.GetClaim("sub") ?? ""),
+        new(OpenIddictConstants.Claims.Subject, result.Principal.GetClaim("sub") ?? "not implement"),
+        new Claim("oauth-sub", result.Principal.GetClaim("oauth-sub") ?? "not implement").SetDestinations(OpenIddictConstants.Destinations.AccessToken),
+        new Claim("auth-type", result.Principal.GetClaim("auth-type") ?? "not implement").SetDestinations(OpenIddictConstants.Destinations.AccessToken),
         new Claim(OpenIddictConstants.Claims.Name, result.Principal.GetClaim("name") ?? "").SetDestinations(OpenIddictConstants.Destinations.AccessToken),
         new("gh_token", result.Principal.GetClaim("token") ?? ""),
         new Claim("some claim", "some value").SetDestinations(OpenIddictConstants.Destinations.AccessToken)
