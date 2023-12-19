@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AuthenticationService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20231218132516_Init")]
+    [Migration("20231219172051_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -88,8 +88,8 @@ namespace AuthenticationService.Migrations
                     b.Property<string>("OAuthID")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("OAuthType")
-                        .HasColumnType("int");
+                    b.Property<string>("OAuthType")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");

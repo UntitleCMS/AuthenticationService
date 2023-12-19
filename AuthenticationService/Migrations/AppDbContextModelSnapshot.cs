@@ -85,8 +85,8 @@ namespace AuthenticationService.Migrations
                     b.Property<string>("OAuthID")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("OAuthType")
-                        .HasColumnType("int");
+                    b.Property<string>("OAuthType")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");

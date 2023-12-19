@@ -1,16 +1,10 @@
-﻿using AuthenticationService.Datas;
+﻿using AuthenticationService.Core.Constants;
+using AuthenticationService.Datas;
 using AuthenticationService.Entitis;
+using AuthenticationService.Features.OAuth.ClaimActions;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Internal;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
-using OpenIddict.Server.AspNetCore;
-using OpenIddict.Validation.AspNetCore;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text.Json;
 
 
@@ -21,6 +15,8 @@ public static class OpenIddictConfiguration
 {
     public static void AddMyOpendIddictConfiguration(this IServiceCollection services)
     {
+        var s = services.BuildServiceProvider().GetService<UserManager<AppIdentityUser>>();
+
         services.AddOpenIddict()
 
         .AddCore(options =>
@@ -80,14 +76,15 @@ public static class OpenIddictConfiguration
             //options.DefaultChallengeScheme = OpenIddictConstants.Schemes.Bearer;
             options.DefaultChallengeScheme = "github";
         })
+            .AddCookie("dummy", o => o.LoginPath = "/login")
             .AddCookie("cookie", o =>
             {
                 o.ExpireTimeSpan = TimeSpan.FromSeconds(5);
                 o.SlidingExpiration = false;
                 o.LoginPath = "/login";
             })
-            .AddCookie("dummy",o=>o.LoginPath = "/login")
-            .AddOAuth("github", o =>
+
+            .AddOAuth(OAuthProvider.Github, o =>
             {
                 o.SignInScheme = "cookie";
                 o.SaveTokens = true;
@@ -100,8 +97,11 @@ public static class OpenIddictConfiguration
                 o.CallbackPath = "/oauth/cb/github";
                 o.UserInformationEndpoint = "https://api.github.com/user";
 
-                o.ClaimActions.MapJsonKey("sub", "id");
-                o.ClaimActions.MapJsonKey("name", "login");
+                //o.ClaimActions.MapJsonKey("sub", "id");
+                //o.ClaimActions.MapJsonKey("name", "login");
+
+                var s = services.BuildServiceProvider().GetService<UserManager<AppIdentityUser>>();
+                o.ClaimActions.Add(new RegisterIfNotExistClaimAction(s));
 
                 o.Events.OnCreatingTicket = async ctx =>
                 {
@@ -112,7 +112,8 @@ public static class OpenIddictConfiguration
                     ctx.RunClaimActions(user);
                 };
             })
-            .AddOAuth("facebook", o =>
+
+            .AddOAuth(OAuthProvider.Facebook, o =>
             {
                 o.SignInScheme = "cookie";
                 o.SaveTokens = true;
@@ -126,8 +127,8 @@ public static class OpenIddictConfiguration
                 o.TokenEndpoint = "https://graph.facebook.com/v18.0/oauth/access_token";
                 o.UserInformationEndpoint = "https://graph.facebook.com/v16.0/me";
 
-                o.ClaimActions.MapJsonKey("sub", "id");
-                o.ClaimActions.MapJsonKey("name", "name");
+                var s = services.BuildServiceProvider().GetService<UserManager<AppIdentityUser>>();
+                o.ClaimActions.Add(new RegisterIfNotExistClaimAction(s));
 
                 o.Events.OnCreatingTicket = async ctx =>
                 {
@@ -139,7 +140,8 @@ public static class OpenIddictConfiguration
                 };
 
             })
-            .AddOAuth("google", o =>
+
+            .AddOAuth(OAuthProvider.Google, o =>
             {
                 o.SignInScheme = "cookie";
                 o.SaveTokens = true;
@@ -155,9 +157,8 @@ public static class OpenIddictConfiguration
                 o.Scope.Add("email");
                 o.Scope.Add("profile");
 
-                o.ClaimActions.MapJsonKey("sub", "sub");
-                o.ClaimActions.MapJsonKey("name", "name");
-                o.ClaimActions.MapJsonKey("email", "email");
+                var s = services.BuildServiceProvider().GetService<UserManager<AppIdentityUser>>();
+                o.ClaimActions.Add(new RegisterIfNotExistClaimAction(s));
 
                 o.Events.OnCreatingTicket = async ctx =>
                 {
