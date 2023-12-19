@@ -100,7 +100,7 @@ public static class OpenIddictConfiguration
                 o.CallbackPath = "/oauth/cb/github";
                 o.UserInformationEndpoint = "https://api.github.com/user";
 
-                o.ClaimActions.MapJsonKey("oauth-sub", "id");
+                o.ClaimActions.MapJsonKey("sub", "id");
                 o.ClaimActions.MapJsonKey("name", "login");
 
                 o.Events.OnCreatingTicket = async ctx =>
@@ -126,7 +126,7 @@ public static class OpenIddictConfiguration
                 o.TokenEndpoint = "https://graph.facebook.com/v18.0/oauth/access_token";
                 o.UserInformationEndpoint = "https://graph.facebook.com/v16.0/me";
 
-                o.ClaimActions.MapJsonKey("oauth-sub", "id");
+                o.ClaimActions.MapJsonKey("sub", "id");
                 o.ClaimActions.MapJsonKey("name", "name");
 
                 o.Events.OnCreatingTicket = async ctx =>
@@ -155,7 +155,7 @@ public static class OpenIddictConfiguration
                 o.Scope.Add("email");
                 o.Scope.Add("profile");
 
-                o.ClaimActions.MapJsonKey("oauth-sub", "sub");
+                o.ClaimActions.MapJsonKey("sub", "sub");
                 o.ClaimActions.MapJsonKey("name", "name");
                 o.ClaimActions.MapJsonKey("email", "email");
 

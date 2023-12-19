@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using System.Security.Claims;
+using static OpenIddict.Abstractions.OpenIddictConstants;
+using AuthenticationService.Core.Extensions;
 
 namespace AuthenticationService.Controllers;
 
@@ -35,15 +37,13 @@ public class AuthController : ControllerBase
         }
 
         // Create a new claims principal
+        var sub = new Guid(result.Principal.GetClaim(Claims.Subject)!);
         var claims = new List<Claim>
     {
         // 'subject' claim which is required
-        new(OpenIddictConstants.Claims.Subject, result.Principal.GetClaim("sub") ?? "not implement"),
-        new Claim("oauth-sub", result.Principal.GetClaim("oauth-sub") ?? "not implement").SetDestinations(OpenIddictConstants.Destinations.AccessToken),
-        new Claim("auth-type", result.Principal.GetClaim("auth-type") ?? "not implement").SetDestinations(OpenIddictConstants.Destinations.AccessToken),
-        new Claim(OpenIddictConstants.Claims.Name, result.Principal.GetClaim("name") ?? "").SetDestinations(OpenIddictConstants.Destinations.AccessToken),
-        new("gh_token", result.Principal.GetClaim("token") ?? ""),
-        new Claim("some claim", "some value").SetDestinations(OpenIddictConstants.Destinations.AccessToken)
+        new (Claims.Subject, sub.ToString() ?? string.Empty),
+        new (Claims.Name, result.Principal.GetClaim(Claims.Name) ?? string.Empty),
+        new ("sub-b64", sub.ToBase64Url() ?? string.Empty),
     };
 
         var claimsIdentity = new ClaimsIdentity(claims, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
@@ -52,6 +52,13 @@ public class AuthController : ControllerBase
 
         // Set requested scopes (this is not done automatically)
         claimsPrincipal.SetScopes(request.GetScopes());
+        claimsPrincipal.SetDestinations(static claim => claim.Type switch
+        {
+            _ => new[]
+            {
+                Destinations.AccessToken
+            }
+        });
 
         // Signing in with the OpenIddict authentiction scheme trigger OpenIddict to issue a code (which can be exchanged for an access token)
         return SignIn(claimsPrincipal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);

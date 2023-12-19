@@ -1,4 +1,5 @@
 ﻿using AuthenticationService.Core.Exceptions;
+using AuthenticationService.Core.Extensions;
 using AuthenticationService.Entitis;
 using AuthenticationService.Features.Login.Models;
 using Microsoft.AspNetCore.Identity;
@@ -32,8 +33,8 @@ public class UsernameLoginService
 
         var c = new List<Claim>()
             {
-                new("sub", user.UserName!),
-                new("name",user.Id),
+                new("name", user.UserName!),
+                new("sub",user.Id),
             };
 
         res.Value = c;
