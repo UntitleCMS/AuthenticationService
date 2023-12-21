@@ -34,13 +34,18 @@ public class LoginModel : PageModel
         var property = new AuthenticationProperties();
 
         if (!Request.Query.Any(i => i.Key == "ReturnUrl"))
-            property.RedirectUri = "/";
+            property.RedirectUri = HttpContext.Request.PathBase;
 
         return SignIn(new(identity), property, "dummy");
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
+        var property = new AuthenticationProperties();
+
+        if (!Request.Query.Any(i => i.Key == "ReturnUrl"))
+            property.RedirectUri = HttpContext.Request.PathBase;
+
         if (C!.Provider?.CompareTo("login") == 0)
         {
             if (C.Username is null || C.Password is null)
@@ -52,14 +57,14 @@ public class LoginModel : PageModel
                 return IncorrectPasswordOrUsername();
 
             var identity = new ClaimsIdentity(claims.Value, "cookie");
-            return SignIn(new(identity), "cookie");
+            return SignIn(new(identity), property, "cookie");
         }
 
         var provider = new string[] { "google", "facebook", "github" };
         if (!provider.Contains(C.Provider))
             return NotSupportLoginMehtod();
 
-        return Challenge(authenticationSchemes: C.Provider!);
+        return Challenge(property, C.Provider!);
     }
 
     private IActionResult IncorrectPasswordOrUsername()
