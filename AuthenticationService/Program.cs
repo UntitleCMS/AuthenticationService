@@ -6,6 +6,7 @@ using OpenIddict.Abstractions;
 using Microsoft.OpenApi.Models;
 using AuthenticationService.Entitis;
 using AuthenticationService.Features.Login;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +18,7 @@ builder.Services
     // Add Json Handeler
     .AddNewtonsoftJson(options =>
     {
-        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore; 
+        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
     });
 builder.Services.AddRazorPages();
 
@@ -80,12 +81,17 @@ builder.Services.BuildServiceProvider()
 
 var app = builder.Build();
 
+app.UsePathBase("/api/auth/v2");
+
+app.UseForwardedHeaders(new() { ForwardedHeaders = ForwardedHeaders.XForwardedProto });
+app.UseForwardedHeaders(new() { ForwardedHeaders = ForwardedHeaders.XForwardedHost });
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors(a=>a
+    app.UseCors(a => a
         .AllowAnyOrigin()
         .AllowAnyHeader()
         .AllowAnyMethod()
