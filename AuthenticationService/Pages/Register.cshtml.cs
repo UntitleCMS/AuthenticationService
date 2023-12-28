@@ -31,7 +31,8 @@ namespace AuthenticationService.Pages
             }, UserInfo.Password);
 
             if (u.Succeeded)
-                return Redirect("./login");
+                return Redirect(Request.PathBase + "/Login" + QueryString.Create(
+                        Request.HasFormContentType ? Request.Form.ToList() : Request.Query.ToList()));
 
             else
             {

@@ -14,7 +14,7 @@
 
     <input type="submit" value="Register"/>
 
-    <a asp-page="/Login">Login</a>
+    <a asp-page="/Login" asp-all-route-data="@Model.Request.Query.Select(i=>new{Key=i.Key.ToString(),Value=i.Value.ToString()}).ToDictionary(i=>i.Key,i=>i.Value)">Register</a>
     <br />
     <p> @Model.Message </p>
 

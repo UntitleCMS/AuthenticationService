@@ -13,7 +13,7 @@
     Password:
     <input asp-for="C!.Password" type="password"/> <br/>
     <input type="submit" value="login" asp-for="C!.Provider"/>
-    <a asp-page="/Register">Register</a>
+    <a asp-page="/Register" asp-all-route-data="@Model.Request.Query.Select(i=>new{Key=i.Key.ToString(),Value=i.Value.ToString()}).ToDictionary(i=>i.Key,i=>i.Value)">Register</a> 
     <br/>
     @Model.Message
     <br/>
