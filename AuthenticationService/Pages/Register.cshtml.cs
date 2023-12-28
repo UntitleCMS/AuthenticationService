@@ -31,13 +31,12 @@ namespace AuthenticationService.Pages
             }, UserInfo.Password);
 
             if (u.Succeeded)
-                return Redirect(Request.PathBase + "/Login" + QueryString.Create(
-                        Request.HasFormContentType ? Request.Form.ToList() : Request.Query.ToList()));
+                return Redirect(Request.PathBase + "/Login" + QueryString.Create(Request.Query.ToList()));
 
             else
             {
                 var msg = u.Errors.Select(e => e.Description);
-                Message = string.Join("\n", msg);
+                Message = string.Join(",", msg);
                 return Page();
             }
         }

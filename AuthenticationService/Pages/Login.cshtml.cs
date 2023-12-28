@@ -28,15 +28,9 @@ public class LoginModel : PageModel
         if (!res.Succeeded)
             return Page();
 
-        // Re-signin to complete Challenge if loged in
-        var claims = new Claim[] { new("dummy", "dummy") };
-        var identity = new ClaimsIdentity(claims, "dummy");
-        var property = new AuthenticationProperties();
+        string? returnUrl = Request.Query.FirstOrDefault(i=>i.Key == "ReturnUrl").Value;
 
-        if (!Request.Query.Any(i => i.Key == "ReturnUrl"))
-            property.RedirectUri = HttpContext.Request.PathBase;
-
-        return SignIn(new(identity), property, "dummy");
+        return Redirect(returnUrl ?? Request.PathBase);
     }
 
     public async Task<IActionResult> OnPostAsync()

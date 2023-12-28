@@ -82,6 +82,7 @@ builder.Services.BuildServiceProvider()
 var app = builder.Build();
 
 app.UsePathBase("/api/auth/v2");
+app.UseStaticFiles();
 
 app.UseForwardedHeaders(new() { ForwardedHeaders = ForwardedHeaders.XForwardedProto });
 app.UseForwardedHeaders(new() { ForwardedHeaders = ForwardedHeaders.XForwardedHost });
