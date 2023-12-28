@@ -1,0 +1,176 @@
+﻿@page
+@using Microsoft.AspNetCore.Components
+@model AuthenticationService.Pages.RegisterModel
+@{
+    ViewData["Title"] = "ลงทะเบียน";
+}
+
+
+<div class="root-container">
+    <div class="main-container">
+        <h1 class="heading">ลงทะเบียน</h1>
+        <form method="post">
+            <div>
+                <input name="username"
+                       type="text"
+                       placeholder="ชื่อผู้ใช้"
+                       required
+                       asp-for="UserInfo!.UserName"
+                       oninput="usernameValidate(this)" />
+            </div>
+            <div>
+                <input name="password"
+                       type="password"
+                       id="password"
+                       placeholder="รหัสผ่าน"
+                       required
+                       asp-for="UserInfo!.Password"
+                       oninput="passwordValidate(this)" />
+            </div>
+            <div>
+                <input name="confirm_password"
+                       type="password"
+                       placeholder="ยืนยันรหัสผ่าน"
+                       required
+                       oninput="passwordConfirmation(this)" />
+            </div>
+            <div class="validate-box">
+                <div class="validate-rule" id="plv">
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             viewBox="0 0 24 24"
+                             fill="currentColor"
+                             width="20"
+                             height="20">
+                            <path fill-rule="evenodd"
+                                  d="M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 0 1 1.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 0 1 1.04-.207Z"
+                                  clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <span>รหัสผ่านมีอย่างน้อย 6 ตัวอักษร</span>
+                </div>
+                <div class="validate-rule" id="pcv">
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             viewBox="0 0 24 24"
+                             fill="currentColor"
+                             width="20"
+                             height="20">
+                            <path fill-rule="evenodd"
+                                  d="M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 0 1 1.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 0 1 1.04-.207Z"
+                                  clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <span>
+                        รหัสผ่านมีตัวอักษรพิมพ์ใหญ่ และพิมพ์เล็ก
+                    </span>
+                </div>
+                <div class="validate-rule" id="pnanv">
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             viewBox="0 0 24 24"
+                             fill="currentColor"
+                             width="20"
+                             height="20">
+                            <path fill-rule="evenodd"
+                                  d="M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 0 1 1.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 0 1 1.04-.207Z"
+                                  clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <span>
+                        รหัสผ่านมีตัวเลข และอักขระพิเศษ
+                    </span>
+                </div>
+
+                <div class="validate-rule" id="pmv">
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             viewBox="0 0 24 24"
+                             fill="currentColor"
+                             width="20"
+                             height="20">
+                            <path fill-rule="evenodd"
+                                  d="M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 0 1 1.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 0 1 1.04-.207Z"
+                                  clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <span>รหัสผ่านตรงกัน</span>
+                </div>
+            </div>
+            <div class="invalid-message">
+                @Model.Message
+            </div>
+            <div>
+                <input id="register" type="submit" value="ลงทะเบียน" disabled />
+            </div>
+        </form>
+        <div>
+            มีบัญชีผู้ใช้แล้ว ? เข้าสู่ระบบ <a asp-page="/Login" asp-all-route-data="@Model.Request.Query.Select(i=>new{Key=i.Key.ToString(),Value=i.Value.ToString()}).ToDictionary(i=>i.Key,i=>i.Value)">ที่นี่</a>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    var l = false;
+    var c = false;
+    var n = false;
+    var m = false;
+
+    function usernameValidate(q) { console.log("not implement") }
+
+    function passwordValidate(q) {
+
+        if (q.value.length >= 6) {
+            plv.classList.add("valid-message");
+            l = true;
+        }
+        else {
+            plv.classList.remove("valid-message");
+            l = false;
+        }
+
+        if (/[a-z]/.test(q.value) && /[A-Z]/.test(q.value)) {
+            pcv.classList.add("valid-message");
+            c = true;
+        }
+        else {
+            pcv.classList.remove("valid-message");
+            c = false;
+        }
+
+        if (/\d/.test(q.value) && /[^a-zA-Z\d]/.test(q.value)) {
+            pnanv.classList.add("valid-message");
+            n = true;
+        }
+        else {
+            pnanv.classList.remove("valid-message");
+            n = false;
+        }
+
+        if (l&&c&&n&&m){
+            register.disabled = false;
+        }else{
+            register.disabled = true;
+        }
+    }
+
+    function passwordConfirmation(q) {
+        if (password.value == q.value){
+            pmv.classList.add("valid-message"); 
+            m = true;
+        }
+        else {
+            pmv.classList.remove("valid-message");
+            m = false;
+        }
+        if (l&&c&&n&&m){
+            register.disabled = false;
+        }else{
+            register.disabled = true;
+        }
+    }
+
+    console.log("@Model.Message")
+</script>

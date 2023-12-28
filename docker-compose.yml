@@ -8,7 +8,8 @@ services:
       dockerfile: AuthenticationService/Dockerfile
     environment: 
       DB_CONNECTION_STRING: Server=auth-database;Database=authentication;User=sa;Password=P@ssword;TrustServerCertificate=True;
-      ISSURE: https://172.28.64.1:4434
+      ACCESS_TOKEN_LIFETIME: 1
+      REFRESH_TOKEN_LIFETIME: 60
 
   auth-database:
     image: mcr.microsoft.com/mssql/server:2019-latest

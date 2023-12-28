@@ -1,10 +1,11 @@
-﻿using AuthenticationService.Datas;
-using Microsoft.EntityFrameworkCore.Internal;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
+﻿using AuthenticationService.Core.Constants;
+using AuthenticationService.Datas;
+using AuthenticationService.Entitis;
+using AuthenticationService.Features.OAuth.ClaimActions;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using OpenIddict.Abstractions;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
+using System.Text.Json;
 
 
 namespace AuthenticationService;
@@ -14,6 +15,8 @@ public static class OpenIddictConfiguration
 {
     public static void AddMyOpendIddictConfiguration(this IServiceCollection services)
     {
+        var s = services.BuildServiceProvider().GetService<UserManager<AppIdentityUser>>();
+
         services.AddOpenIddict()
 
         .AddCore(options =>
@@ -24,93 +27,160 @@ public static class OpenIddictConfiguration
 
         .AddServer(options =>
         {
-            // Enable endpoint.
-            options.SetTokenEndpointUris("token");
-            options.SetUserinfoEndpointUris("userinfo");
-
-            // Enable flow.
-            options.AllowPasswordFlow();
+            options.AllowClientCredentialsFlow();
+            options.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
             options.AllowRefreshTokenFlow();
 
-            // Allow no client_id request
-            options.AcceptAnonymousClients();
+            options.SetTokenEndpointUris("token");
+            options.SetAuthorizationEndpointUris("auth");
+            options.SetUserinfoEndpointUris("me");
 
-            // Register the signing and encryption credentials.
             options
                .AddDevelopmentEncryptionCertificate()
                .AddDevelopmentSigningCertificate()
                .DisableAccessTokenEncryption();
 
+            var accessTokenLifeTimeENV = Environment.GetEnvironmentVariable("ACCESS_TOKEN_LIFETIME") ?? "1";
+            var refreshTokenLifeTimeENV = Environment.GetEnvironmentVariable("REFRESH_TOKEN_LIFETIME") ?? "60";
 
-            // Using reference tokens means the actual access and refresh tokens
-            // are stored in the database and different tokens, referencing the actual
-            // tokens (in the db), are used in request headers. The actual tokens are not
-            // made public.
-            //options.UseReferenceAccessTokens();
-            //options.UseReferenceRefreshTokens();
+            _ = int.TryParse(accessTokenLifeTimeENV, out int accessTokenLifeTimeValue);
+            _ = int.TryParse(refreshTokenLifeTimeENV, out int refreshTokenLifeTimeValue);
 
-            options
-                .RegisterScopes
-                (
-                    OpenIddictConstants.Scopes.Email,
-                    OpenIddictConstants.Scopes.Profile,
-                    OpenIddictConstants.Scopes.Roles,
-                    OpenIddictConstants.Scopes.Phone
-                );
+            options.SetAccessTokenLifetime(TimeSpan.FromMinutes(accessTokenLifeTimeValue));
+            options.SetRefreshTokenLifetime(TimeSpan.FromMinutes(refreshTokenLifeTimeValue));
 
-            // Set the lifetime of your tokens
-            //options.SetAccessTokenLifetime(TimeSpan.FromMinutes(5));
-            options.SetAccessTokenLifetime(TimeSpan.FromDays(1));
-            options.SetRefreshTokenLifetime(TimeSpan.FromDays(2));
-
-            //options.SetAccessTokenLifetime(TimeSpan.FromSeconds(30));
-            //options.SetRefreshTokenLifetime(TimeSpan.FromMinutes(30));
-
-            var issure = Environment.GetEnvironmentVariable("ISSURE")
-                ?? throw new Exception("ENV AUTH_SERVER is null");
-            options.SetIssuer(issure);
-
-            //options.SetIssuer("https://172.28.64.1:4434");
-
-            // Register the ASP.NET Core host and configure the ASP.NET Core options.
             options.UseAspNetCore()
                    .EnableTokenEndpointPassthrough()
+                   .EnableAuthorizationEndpointPassthrough()
                    .DisableTransportSecurityRequirement();
         })
 
-        // Register the OpenIddict validation components.
         .AddValidation(options =>
         {
-            // Import the configuration from the local OpenIddict server instance.
             options.UseLocalServer();
-
-            // Register the ASP.NET Core host.
             options.UseAspNetCore();
-        })
-
-        // github
-        .AddClient(options =>
-        {
-            options
-                .AllowAuthorizationCodeFlow();
-            options
-                .AddDevelopmentEncryptionCertificate()
-                .AddDevelopmentSigningCertificate();
-            options
-                .UseAspNetCore()
-                .EnableRedirectionEndpointPassthrough();
-            options.UseWebProviders()
-                .UseGitHub(options =>
-                {
-                    options
-                        .SetClientId("b4b68f83d48d756f33e0")
-                        .SetClientSecret("8c584df75e3f9ce3a554641946cc2faed50b34a8")
-                        .SetRedirectUri("callback/login/github");
-                });
         });
 
-        // Register the worker responsible of seeding the database with the sample clients.
-        // Note: in a real world application, this step should be part of a setup script.
-        //services.AddHostedService<Worker>(); 
+        services.AddHostedService<Worker>();
+
+        // Add ASP.NET Identity
+        services.AddIdentity<AppIdentityUser, AppIdentityRole>()
+            .AddSignInManager()
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddUserManager<UserManager<AppIdentityUser>>()
+            .AddDefaultTokenProviders();
+
+        services.Configure<IdentityOptions>(options =>
+        {
+            options.ClaimsIdentity.UserNameClaimType = OpenIddictConstants.Claims.Name;
+            options.ClaimsIdentity.UserIdClaimType = OpenIddictConstants.Claims.Subject;
+            options.ClaimsIdentity.RoleClaimType = OpenIddictConstants.Claims.Role;
+        });
+
+        services
+            //.AddAuthentication("cookie")
+            .AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = "cookie";
+            options.DefaultScheme = OpenIddictConstants.Schemes.Bearer;
+            //options.DefaultChallengeScheme = OpenIddictConstants.Schemes.Bearer;
+            options.DefaultChallengeScheme = "github";
+        })
+            .AddCookie("dummy", o => o.LoginPath = "/login")
+            .AddCookie("cookie", o =>
+            {
+                o.ExpireTimeSpan = TimeSpan.FromSeconds(5);
+                o.SlidingExpiration = false;
+                o.LoginPath = "/login";
+            })
+
+            .AddOAuth(OAuthProvider.Github, o =>
+            {
+                o.SignInScheme = "cookie";
+                o.SaveTokens = true;
+
+                o.ClientId = "b4b68f83d48d756f33e0";
+                o.ClientSecret = "8c584df75e3f9ce3a554641946cc2faed50b34a8";
+
+                o.AuthorizationEndpoint = "https://github.com/login/oauth/authorize";
+                o.TokenEndpoint = "https://github.com/login/oauth/access_token";
+                o.CallbackPath = "/oauth/cb/github";
+                o.UserInformationEndpoint = "https://api.github.com/user";
+
+                //o.ClaimActions.MapJsonKey("sub", "id");
+                //o.ClaimActions.MapJsonKey("name", "login");
+
+                var s = services.BuildServiceProvider().GetService<UserManager<AppIdentityUser>>();
+                o.ClaimActions.Add(new RegisterIfNotExistClaimAction(s));
+
+                o.Events.OnCreatingTicket = async ctx =>
+                {
+                    using var req = new HttpRequestMessage(HttpMethod.Get, ctx.Options.UserInformationEndpoint);
+                    req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ctx.AccessToken);
+                    using var res = await ctx.Backchannel.SendAsync(req);
+                    var user = await res.Content.ReadFromJsonAsync<JsonElement>();
+                    ctx.RunClaimActions(user);
+                };
+            })
+
+            .AddOAuth(OAuthProvider.Facebook, o =>
+            {
+                o.SignInScheme = "cookie";
+                o.SaveTokens = true;
+
+                o.ClientId = "344722471526711";
+                o.ClientSecret = "f430ac494e6b3d9d809404d77b013047";
+
+
+                o.CallbackPath = "/oauth/cb/facebook";
+                o.AuthorizationEndpoint = "https://www.facebook.com/v18.0/dialog/oauth";
+                o.TokenEndpoint = "https://graph.facebook.com/v18.0/oauth/access_token";
+                o.UserInformationEndpoint = "https://graph.facebook.com/v16.0/me";
+
+                var s = services.BuildServiceProvider().GetService<UserManager<AppIdentityUser>>();
+                o.ClaimActions.Add(new RegisterIfNotExistClaimAction(s));
+
+                o.Events.OnCreatingTicket = async ctx =>
+                {
+                    using var req = new HttpRequestMessage(HttpMethod.Get, ctx.Options.UserInformationEndpoint);
+                    req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ctx.AccessToken);
+                    using var res = await ctx.Backchannel.SendAsync(req);
+                    var user = await res.Content.ReadFromJsonAsync<JsonElement>();
+                    ctx.RunClaimActions(user);
+                };
+
+            })
+
+            .AddOAuth(OAuthProvider.Google, o =>
+            {
+                o.SignInScheme = "cookie";
+                o.SaveTokens = true;
+
+                o.ClientId = "242349616268-1nl5f43uqea77qcpcts5aa0bbflks331.apps.googleusercontent.com";
+                o.ClientSecret = "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";
+
+                o.CallbackPath = "/oauth/cb/google";
+                o.AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
+                o.TokenEndpoint = "https://oauth2.googleapis.com/token";
+                o.UserInformationEndpoint = "https://openidconnect.googleapis.com/v1/userinfo";
+                o.Scope.Add("openid");
+                o.Scope.Add("email");
+                o.Scope.Add("profile");
+
+                var s = services.BuildServiceProvider().GetService<UserManager<AppIdentityUser>>();
+                o.ClaimActions.Add(new RegisterIfNotExistClaimAction(s));
+
+                o.Events.OnCreatingTicket = async ctx =>
+                {
+                    using var req = new HttpRequestMessage(HttpMethod.Get, ctx.Options.UserInformationEndpoint);
+                    req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ctx.AccessToken);
+                    using var res = await ctx.Backchannel.SendAsync(req);
+                    var user = await res.Content.ReadFromJsonAsync<JsonElement>();
+                    ctx.RunClaimActions(user);
+                };
+
+            });
+
+
     }
 }

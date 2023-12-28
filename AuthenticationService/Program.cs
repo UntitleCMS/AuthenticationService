@@ -1,15 +1,12 @@
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using AuthenticationService.Datas;
 using AuthenticationService;
-using System;
 using Microsoft.AspNetCore.Identity;
-using OpenIddict.Server.AspNetCore;
 using OpenIddict.Abstractions;
-using AuthenticationService.Authentication.Register;
-using AuthenticationService.Authentication.Token;
-using AuthenticationService.Authentication.Profile;
 using Microsoft.OpenApi.Models;
+using AuthenticationService.Entitis;
+using AuthenticationService.Features.Login;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,8 +18,9 @@ builder.Services
     // Add Json Handeler
     .AddNewtonsoftJson(options =>
     {
-        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore; 
+        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
     });
+builder.Services.AddRazorPages();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -73,31 +71,8 @@ builder.Services.AddDbContext<AppDbContext>(opt => opt
 // Add OpendIddict configuration
 builder.Services.AddMyOpendIddictConfiguration();
 
-// Add ASP.NET Identity
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-    .AddSignInManager()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddUserManager<UserManager<IdentityUser>>()
-    .AddDefaultTokenProviders();
 
-builder.Services.Configure<IdentityOptions>(options =>
-{
-    options.ClaimsIdentity.UserNameClaimType = OpenIddictConstants.Claims.Name;
-    options.ClaimsIdentity.UserIdClaimType = OpenIddictConstants.Claims.Subject;
-    options.ClaimsIdentity.RoleClaimType = OpenIddictConstants.Claims.Role;
-});
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = OpenIddictConstants.Schemes.Bearer;
-    options.DefaultChallengeScheme = OpenIddictConstants.Schemes.Bearer;
-});
-
-
-
-builder.Services.AddScoped<RegisterService>();
-builder.Services.AddScoped<TokenService>();
-builder.Services.AddScoped<ProfileService>();
+builder.Services.AddScoped<UsernameLoginService>();
 
 
 builder.Services.BuildServiceProvider()
@@ -106,12 +81,18 @@ builder.Services.BuildServiceProvider()
 
 var app = builder.Build();
 
+app.UsePathBase("/api/auth/v2");
+app.UseStaticFiles();
+
+app.UseForwardedHeaders(new() { ForwardedHeaders = ForwardedHeaders.XForwardedProto });
+app.UseForwardedHeaders(new() { ForwardedHeaders = ForwardedHeaders.XForwardedHost });
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors(a=>a
+    app.UseCors(a => a
         .AllowAnyOrigin()
         .AllowAnyHeader()
         .AllowAnyMethod()
@@ -124,5 +105,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapRazorPages();
 
 app.Run();

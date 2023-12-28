@@ -1,65 +1,51 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using OpenIddict.Server.AspNetCore;
-using static OpenIddict.Abstractions.OpenIddictConstants;
-using System.Security.Claims;
-using OpenIddict.Abstractions;
-using Microsoft.AspNetCore;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.Diagnostics;
-using AuthenticationService.Authentication.Token;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using OpenIddict.Abstractions;
+using OpenIddict.Server.AspNetCore;
+using System.Security.Claims;
 
 namespace AuthenticationService.Controllers;
 
+[ApiController]
 public class TokenController : ControllerBase
 {
-    private readonly IOpenIddictApplicationManager _applicationManager;
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
-
-    private readonly TokenService _tokenService;
-
-    public TokenController
-    (
-        IOpenIddictApplicationManager applicationManager,
-        UserManager<IdentityUser> userManager,
-        SignInManager<IdentityUser> signInManager
-,
-        TokenService tokenService)
+    [HttpGet, HttpPost, Route("/token")]
+    public async Task<IActionResult> ExchangeAsync()
     {
-        _applicationManager = applicationManager;
-        _userManager = userManager;
-        _signInManager = signInManager;
-        _tokenService = tokenService;
-    }
+        var request = HttpContext.GetOpenIddictServerRequest() ??
+                          throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
-    [HttpPost("token"), Produces("application/json")]
-    public async Task<IActionResult> Exchange()
-    {
-        var request
-            = HttpContext.GetOpenIddictServerRequest()
-            ?? throw new InvalidOperationException("OpenIddictServerRequest is null");
+        ClaimsPrincipal claimsPrincipal;
 
-
-        ClaimsPrincipal principal;
-
-        switch (request.GrantType)
+        if (request.IsClientCredentialsGrantType())
         {
-            case GrantTypes.RefreshToken:
-                principal = await _tokenService.Refresh();
-                return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-
-            case GrantTypes.Password:
-                principal = await _tokenService.Password(); 
-                return SignIn( principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+            var identity = new ClaimsIdentity(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+            identity.AddClaim(OpenIddictConstants.Claims.Subject, request.ClientId ?? throw new InvalidOperationException());
+            identity.AddClaim("some-claim", "some-value", OpenIddictConstants.Destinations.AccessToken);
+            claimsPrincipal = new ClaimsPrincipal(identity);
+            claimsPrincipal.SetScopes(request.GetScopes());
         }
 
-       throw new NotImplementedException("The specified grant type is not implemented.");
-    }
+        else if (request.IsAuthorizationCodeGrantType())
+        {
+            // Retrieve the claims principal stored in the authorization code
+            claimsPrincipal = (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)).Principal;
+        }
 
+        else if (request.IsRefreshTokenGrantType())
+        {
+            // Retrieve the claims principal stored in the refresh token.
+            claimsPrincipal = (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)).Principal;
+        }
+
+        else
+        {
+            throw new InvalidOperationException("The specified grant type is not supported.");
+        }
+
+        return SignIn(claimsPrincipal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+
+    }
 }

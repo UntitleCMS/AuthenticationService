@@ -25,16 +25,50 @@ namespace AuthenticationService
                 await manager.CreateAsync(new OpenIddictApplicationDescriptor
                 {
                     ClientId = "console",
-                    ClientSecret = "388D45FA-B36B-4988-BA59-B187D329C207",
+                    //ClientSecret = "388D45FA-B36B-4988-BA59-B187D329C207",
                     DisplayName = "My client application",
+                    RedirectUris = { new Uri("http://localhost:4200") },
                     Permissions =
                     {
                         Permissions.Endpoints.Token,
+                        Permissions.Endpoints.Authorization,
+
                         Permissions.GrantTypes.ClientCredentials,
+                        Permissions.GrantTypes.AuthorizationCode,
+
                         Permissions.GrantTypes.Password,
                         Permissions.GrantTypes.RefreshToken,
+
                         Permissions.Scopes.Profile,
-                        Permissions.Scopes.Roles
+                        Permissions.Scopes.Roles,
+
+                        Permissions.ResponseTypes.Code
+                    }
+                });
+            }
+            if (await manager.FindByClientIdAsync("postman") is null)
+            {
+                await manager.CreateAsync(new OpenIddictApplicationDescriptor
+                {
+                    ClientId = "postman",
+                    //ClientSecret = "388D45FA-B36B-4988-BA59-B187D329C207",
+                    DisplayName = "My client application",
+                    RedirectUris = { new Uri("https://oauth.pstmn.io/v1/callback") },
+                    Permissions =
+                    {
+                        Permissions.Endpoints.Token,
+                        Permissions.Endpoints.Authorization,
+
+                        Permissions.GrantTypes.ClientCredentials,
+                        Permissions.GrantTypes.AuthorizationCode,
+
+                        Permissions.GrantTypes.Password,
+                        Permissions.GrantTypes.RefreshToken,
+
+                        Permissions.Scopes.Profile,
+                        Permissions.Scopes.Roles,
+
+                        Permissions.ResponseTypes.Code
                     }
                 });
             }
