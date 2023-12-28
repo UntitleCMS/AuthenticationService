@@ -56,7 +56,8 @@ public class AuthController : ControllerBase
         {
             _ => new[]
             {
-                Destinations.AccessToken
+                Destinations.AccessToken,
+                Destinations.IdentityToken,
             }
         });
 
