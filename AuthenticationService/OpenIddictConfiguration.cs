@@ -29,6 +29,7 @@ public static class OpenIddictConfiguration
         {
             options.AllowClientCredentialsFlow();
             options.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
+            options.AllowRefreshTokenFlow();
 
             options.SetTokenEndpointUris("token");
             options.SetAuthorizationEndpointUris("auth");
@@ -38,6 +39,15 @@ public static class OpenIddictConfiguration
                .AddDevelopmentEncryptionCertificate()
                .AddDevelopmentSigningCertificate()
                .DisableAccessTokenEncryption();
+
+            var accessTokenLifeTimeENV = Environment.GetEnvironmentVariable("ACCESS_TOKEN_LIFETIME") ?? "1";
+            var refreshTokenLifeTimeENV = Environment.GetEnvironmentVariable("REFRESH_TOKEN_LIFETIME") ?? "60";
+
+            _ = int.TryParse(accessTokenLifeTimeENV, out int accessTokenLifeTimeValue);
+            _ = int.TryParse(refreshTokenLifeTimeENV, out int refreshTokenLifeTimeValue);
+
+            options.SetAccessTokenLifetime(TimeSpan.FromMinutes(accessTokenLifeTimeValue));
+            options.SetRefreshTokenLifetime(TimeSpan.FromMinutes(refreshTokenLifeTimeValue));
 
             options.UseAspNetCore()
                    .EnableTokenEndpointPassthrough()
