@@ -30,6 +30,7 @@
             <div>
                 <input name="confirm_password"
                        type="password"
+                       id="cpassword"
                        placeholder="ยืนยันรหัสผ่าน"
                        required
                        oninput="passwordConfirmation(this)" />
@@ -147,6 +148,15 @@
         else {
             pnanv.classList.remove("valid-message");
             n = false;
+        }
+
+        if (cpassword.value == q.value) {
+            pmv.classList.add("valid-message");
+            m = true;
+        }
+        else {
+            pmv.classList.remove("valid-message");
+            m = false;
         }
 
         if (l&&c&&n&&m){
