@@ -34,7 +34,9 @@ namespace AuthenticationService
                         new Uri("https://local.villsource.tk"),
                         new Uri("http://localhost:4200"),
                         new Uri("http://localhost"),
-                        new Uri("https://localhost")
+                        new Uri("https://localhost"),
+                        new Uri("https://blog.villsource.net"),
+                        new Uri("http://blog.villsource.net")
                     },
                     Permissions =
                     {

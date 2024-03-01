@@ -17,6 +17,7 @@ FROM build AS publish
 RUN dotnet publish "AuthenticationService.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
+LABEL org.opencontainers.image.source = "https://github.com/UntitleCMS/AuthenticationService"
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "AuthenticationService.dll"]
