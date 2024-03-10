@@ -27,7 +27,17 @@ namespace AuthenticationService
                     ClientId = "console",
                     //ClientSecret = "388D45FA-B36B-4988-BA59-B187D329C207",
                     DisplayName = "My client application",
-                    RedirectUris = { new Uri("http://localhost:4200") },
+                    RedirectUris = {
+                        new Uri("https://p.villsource.tk"),
+                        new Uri("http://local.villsource.tk"),
+                        new Uri("http://local.villsource.tk:4200"),
+                        new Uri("https://local.villsource.tk"),
+                        new Uri("http://localhost:4200"),
+                        new Uri("http://localhost"),
+                        new Uri("https://localhost"),
+                        new Uri("https://blog.villsource.net"),
+                        new Uri("http://blog.villsource.net")
+                    },
                     Permissions =
                     {
                         Permissions.Endpoints.Token,

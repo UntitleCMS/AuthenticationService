@@ -30,6 +30,7 @@
             <div>
                 <input name="confirm_password"
                        type="password"
+                       id="cpassword"
                        placeholder="ยืนยันรหัสผ่าน"
                        required
                        oninput="passwordConfirmation(this)" />
@@ -104,8 +105,10 @@
                 <input id="register" type="submit" value="ลงทะเบียน" disabled />
             </div>
         </form>
-        <div>
+        <div style="max-width:500px; text-align: center;">
             มีบัญชีผู้ใช้แล้ว ? เข้าสู่ระบบ <a asp-page="/Login" asp-all-route-data="@Model.Request.Query.Select(i=>new{Key=i.Key.ToString(),Value=i.Value.ToString()}).ToDictionary(i=>i.Key,i=>i.Value)">ที่นี่</a>
+            <hr />
+            คลิก "ลงทะเบียน" เพื่อยอมรับ<a href="/articles/TermsAndPolicy" target="_blank">ข้อกำหนดในการให้บริการ</a>ของ เบต้าบล็อก และรับทราบว่าน<a href="/articles/TermsAndPolicy" target="_blank">โยบายความเป็นส่วนตัวของ</a> เบต้าบล็อก มีผลกับคุณ
         </div>
     </div>
 </div>
@@ -147,6 +150,15 @@
         else {
             pnanv.classList.remove("valid-message");
             n = false;
+        }
+
+        if (cpassword.value == q.value) {
+            pmv.classList.add("valid-message");
+            m = true;
+        }
+        else {
+            pmv.classList.remove("valid-message");
+            m = false;
         }
 
         if (l&&c&&n&&m){

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace AuthenticationService.Features.OAuth.ClaimActions;
@@ -38,7 +39,7 @@ public class RegisterIfNotExistClaimAction : ClaimAction
             {
                 OAuthID = id.Sub,
                 OAuthType = id.Issuer,
-                UserName = id.Name,
+                UserName = Regex.Replace(id.Name!.Trim(), @"[^a-zA-Z\d]", "_"),
             };
             var res = await _userManager.CreateAsync(user);
         }
