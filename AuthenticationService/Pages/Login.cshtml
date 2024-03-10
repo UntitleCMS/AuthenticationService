@@ -79,7 +79,7 @@
         <div style="max-width:500px; text-align: center;">
             ยังไม่มีบัญชีผู้ใช้ ? ลงทะเบียน <a asp-page="/Register" asp-all-route-data="@Model.Request.Query.Select(i=>new{Key=i.Key.ToString(),Value=i.Value.ToString()}).ToDictionary(i=>i.Key,i=>i.Value)">ที่นี่</a>
             <hr />
-            คลิก "เข้าสู่ระบบ" เพื่อยอมรับ<a href="/post/TermsAndPolicy" target="_blank">ข้อกำหนดในการให้บริการ</a>ของ เบต้าบล็อก และรับทราบว่าน<a href="/post/TermsAndPolicy" target="_blank">โยบายความเป็นส่วนตัวของ</a> เบต้าบล็อก มีผลกับคุณ
+            คลิก "เข้าสู่ระบบ" เพื่อยอมรับ<a href="/articles/TermsAndPolicy" target="_blank">ข้อกำหนดในการให้บริการ</a>ของ เบต้าบล็อก และรับทราบว่าน<a href="/articles/TermsAndPolicy" target="_blank">โยบายความเป็นส่วนตัวของ</a> เบต้าบล็อก มีผลกับคุณ
         </div>
     </div>
 </div>
